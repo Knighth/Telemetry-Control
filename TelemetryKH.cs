@@ -233,12 +233,12 @@ namespace TelemetryControl
             if (Telemetry.debug || Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.EnableAllButLogToFileInstead))
             {
                 if (Mod.DEBUG_LOG_ON) { Helper.dbgLog("Dumping telemetry to log enabled:"); }
-                Helper.dbgLog(JSON.JsonEncode(hashtable));
+                Helper.dbgLog("logging data that would be pushed:\n" + JSON.JsonEncode(hashtable));
                 this.Clear();
                 return;
             }
             if (Mod.DEBUG_LOG_ON)
-            { Helper.dbgLog("Pushing data.  :\r\n" + JSON.JsonEncode(hashtable)); }
+            { Helper.dbgLog("debug mode, Pushing data.  :\r\n" + JSON.JsonEncode(hashtable)); }
             Request request2 = new Request("post", Telemetry.paradoxApiURL, hashtable);
             request2.Send(delegate(Request request)
             {

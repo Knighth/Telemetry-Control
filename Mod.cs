@@ -33,7 +33,6 @@ namespace TelemetryControl
         public static bool IsTMDetoured = false;       //Have we redirected TelemetryManager?
         public static bool IsInProcessOfDisable = false;
         private static bool InToogleProcess = false;
-        private static bool IsFirstToggle = true;
         private static string orgNoWorkshopText = "";
         private static UIComponent MyOptionComponent;
 
@@ -76,7 +75,7 @@ namespace TelemetryControl
                 IsInProcessOfDisable = false;
                 SetStartupOptions();
             }
-            Helper.dbgLog(" This mod has been set enabled.");
+            Helper.dbgLog(" This mod has been set enabled. " + DateTime.Now.ToString() );
         }
 
 
@@ -459,12 +458,15 @@ namespace TelemetryControl
          /// <param name="turnon">true\false flip it on or off</param>
          public void ToggleTelemetrySetting(Helper.TelemOption toptionset,bool turnon)
         {
-            if (InToogleProcess)
-            { return; } //abort we're being called via settings triggered inside DoTooltips.
-            //because we don't want to run at all first time because initial painting triggers us.
-            if (IsFirstToggle)
-            { IsFirstToggle = false; return; } 
 
+            // abort, we are being called via settings triggered inside DoTooltips.
+            // we don't want to setup an infinate loop since changing checkmarks in checkforreset via dotooltips will 
+            // trigger 'toggle' event.
+            if (InToogleProcess)
+            {
+                if (Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("skipping toggle trigger" + toptionset.ToString()); }
+                return; 
+            }
             
             InToogleProcess = true; //set our flag
             CheckForReset(toptionset,turnon);
@@ -541,7 +543,7 @@ namespace TelemetryControl
          {
              try
              {
-                 if ((Mod.config.TelemetryLevel & (uint)Helper.TelemOption.DisableWorkshopAdPanel) == (uint)Helper.TelemOption.DisableWorkshopAdPanel)
+                 if (Helper.HasTelemFlag(Mod.config.TelemetryLevel ,Helper.TelemOption.DisableWorkshopAdPanel))
                  {
                      if (!IsInProcessOfDisable)
                      {
@@ -652,7 +654,7 @@ namespace TelemetryControl
          public static System.Collections.IEnumerator SetDelayedDisabledLabelText()
          {
              bool bWeAreDone = false;
-             if (Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Coroutine started " + DateTime.Now.ToString()); }
+             if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL >= 2) { Helper.dbgLog("Coroutine started " + DateTime.Now.ToString()); }
              while (bWeAreDone == false)
              {
                 try
@@ -661,9 +663,9 @@ namespace TelemetryControl
                     if (rootView != null)
                     {
                         bWeAreDone = true;
-                        if (Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("calling AttemptToDisableWorkshop via coroutine"); }
+                        if (DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("calling AttemptToDisableWorkshop via coroutine"); }
                         AttemptToDisableWorkshop(rootView);
-                        if (Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("breaking coroutine - completed."); }
+                        if (DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("breaking coroutine - completed."); }
                         yield break;
                     }             
                 }
@@ -674,7 +676,7 @@ namespace TelemetryControl
                 }
                 yield return new WaitForSeconds(2.0f);
             }
-            if (Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("coroutine completed " + DateTime.Now.ToString()); }
+             if (DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("coroutine completed " + DateTime.Now.ToString()); }
             yield break;
          }
 
@@ -695,7 +697,7 @@ namespace TelemetryControl
                  }
                  else
                  {
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("NotInDisableProcess, Mod.IsEnabled=false - setting static var on WorkshopAdPanels"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("NotInDisableProcess, Mod.IsEnabled=false - setting static var on WorkshopAdPanels"); }
                      WorkshopAdPanel tmpWAP = new WorkshopAdPanel();
                      typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, true);
                      if(rootView !=null)
@@ -719,27 +721,27 @@ namespace TelemetryControl
              WorkshopAdPanel tmpWAP;
              try
              {
-                 if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Attempting to Disable WorkshopAdPanel"); }
+                 if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Attempting to Disable WorkshopAdPanel"); }
 
                  List<WorkshopAdPanel> WAPList = new List<WorkshopAdPanel>();
                  rootView.GetComponentsInChildren<WorkshopAdPanel>(true, WAPList);
                  if (DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("Got the list"); }
                  if (WAPList.Count > 0)
                  {
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Found " + WAPList.Count.ToString() + " WorkshopAdPanels"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Found " + WAPList.Count.ToString() + " WorkshopAdPanels"); }
                      tmpWAP = WAPList[0];
-                     if (DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("0= n=" + tmpWAP.component.name + "  cn=" + tmpWAP.component.cachedName + "  pn=" + tmpWAP.component.parent.name + "  pcn=" + tmpWAP.component.parent.cachedName); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("0= n=" + tmpWAP.component.name + "  cn=" + tmpWAP.component.cachedName + "  pn=" + tmpWAP.component.parent.name + "  pcn=" + tmpWAP.component.parent.cachedName); }
                      typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, true);
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize= set"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize= set"); }
                      bool retb = (bool)typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).GetValue(tmpWAP);
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize=" + retb.ToString()); }
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("now going to play with components - WorkshopAdPanels"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize=" + retb.ToString()); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("now going to play with components - WorkshopAdPanels"); }
 
                      UIScrollablePanel usp = (UIScrollablePanel)typeof(WorkshopAdPanel).GetField("m_ScrollContainer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(tmpWAP);
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("grabbed Scrollable ref via reflection."); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("grabbed Scrollable ref via reflection."); }
                      if (usp != null)
                      {
-                         if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Scrollable was not null."); }
+                         if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Scrollable was not null."); }
                          usp.isEnabled = false;
                          usp.isVisible = false;
                          usp.Awake();
@@ -781,32 +783,32 @@ namespace TelemetryControl
              WorkshopAdPanel tmpWAP;
              try
              {
-                 if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Attempting to Renable WorkshopAdPanel"); }
+                 if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Attempting to Renable WorkshopAdPanel"); }
                  List<WorkshopAdPanel> WAPList = new List<WorkshopAdPanel>();
                  rootView.GetComponentsInChildren<WorkshopAdPanel>(true, WAPList);
-                 if (DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("Got the list"); }
+                 if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("Got the list"); }
                  if (WAPList.Count > 0)
                  {
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Found " + WAPList.Count.ToString() + " WorkshopAdPanels"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Found " + WAPList.Count.ToString() + " WorkshopAdPanels"); }
                      tmpWAP = WAPList[0];
-                     if (DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("0= n=" + tmpWAP.component.name + "  cn=" + tmpWAP.component.cachedName + "  pn=" + tmpWAP.component.parent.name + "  pcn=" + tmpWAP.component.parent.cachedName); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 2) { Helper.dbgLog("0= n=" + tmpWAP.component.name + "  cn=" + tmpWAP.component.cachedName + "  pn=" + tmpWAP.component.parent.name + "  pcn=" + tmpWAP.component.parent.cachedName); }
                      typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, false);
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize= set"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize= set"); }
                      bool retb = (bool)typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).GetValue(tmpWAP);
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize=" + retb.ToString()); }
-                     if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Now going to play with components - WorkshopAdPanels"); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("WorkshopAdPanel.dontInitialize=" + retb.ToString()); }
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Now going to play with components - WorkshopAdPanels"); }
                      UIScrollablePanel usptmp = tmpWAP.Find<UIScrollablePanel>("Container");
                      if (usptmp != null)
                      {
-                         if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Found scrollablePanel 'Container' "); }
+                         if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Found scrollablePanel 'Container' "); }
                          typeof(WorkshopAdPanel).GetField("m_ScrollContainer", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(tmpWAP, usptmp);
-                         if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("inserted it into base panel object."); }
+                         if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("inserted it into base panel object."); }
                      }
 
                      UIScrollablePanel usp = (UIScrollablePanel)typeof(WorkshopAdPanel).GetField("m_ScrollContainer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(tmpWAP);
                      if (usp != null)
                      {
-                         if (DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Scrollable was not null"); }
+                         if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Scrollable was not null"); }
                          usp.isEnabled = true;
                          usp.isVisible = true;
                          usp.Awake();
