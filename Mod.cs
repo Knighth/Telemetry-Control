@@ -23,7 +23,7 @@ namespace TelemetryControl
         internal const string MOD_DLL_NAME = "TelemetryControl";
         internal const string MOD_DESCRIPTION = "Allows you to control what if any data is sent to PDX.";
         internal static readonly string MOD_DBG_Prefix = "Telemetry Control"; //same..for now.
-        internal const string VERSION_BUILD_NUMBER = "1.2.1-f1 build_001";
+        internal const string VERSION_BUILD_NUMBER = "1.2.2-f3 build_001";
         public static readonly string MOD_CONFIGPATH = "TelemetryControl_Config.xml";
         
         public static bool IsEnabled = false;           //tracks if the mod is enabled.
@@ -236,11 +236,11 @@ namespace TelemetryControl
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnAppStart);
                                 break;
                             case "Disable Machine Info":
-                                cb[i].tooltip = "Disables telemetry sent for when you boot up the game exe.\n it includes information to id your specific computer & steamid \n**Please Note: This setting does nothing atm, mods load too late to change this\n if you want to disable this you must use patched Assemembly-CSharp.dll";
+                                cb[i].tooltip = "Disables telemetry sent for when you boot up the game exe.\n it includes information to id your specific computer spec & steamid or paradox login\n**Please Note: This setting does nothing atm, mods load too late to change this\n if you want to disable this you must use patched Assemembly-CSharp.dll";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableMachineInfo);
                                 break;
                             case "Disable Custom Content":
-                                cb[i].tooltip = "Disables telemetry about what custom content you load with a map.\n it includes information such has counts of building,props,trees,vehicles,mods, and details about every senabled mod.";
+                                cb[i].tooltip = "Disables telemetry about what custom content you load with a map.\n It includes information such has counts of building,props,trees,vehicles,mods, and details about every enabled mod.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableCustomContent );
                                 break;
                             case "Disable Session Start":
@@ -252,7 +252,7 @@ namespace TelemetryControl
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableSessionLoaded );
                                 break;
                             case "Disable Session End":
-                                cb[i].tooltip = "Disables telemetry about a Session End (map unloaded).\n it includes data pair that a session has ended, and of what type it was (map,game,asset)";
+                                cb[i].tooltip = "Disables telemetry about a Session End (map unloaded).\n it includes data that a session has ended, and of what type it was (map,game,asset)";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableEndSession);
                                 break;
                             case "Disable Exception Reporting":
@@ -280,7 +280,7 @@ namespace TelemetryControl
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.EnableAllButLogToFileInstead);
                                 break;
                             case "DisableWorkshopAdPanel":
-                                cb[i].tooltip = "Attempts to disable this workshop 'feeds' panel, does not disable workshop in general.\n There is no telemetry directly associated with disabling this.\n I simply find the feeds a waste of bandwidth.";
+                                cb[i].tooltip = "Attempts to disable the workshop 'feeds' panel, does not disable workshop in general.\n There is no telemetry directly associated with disabling this.\n I simply find the feeds a waste of bandwidth.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableWorkshopAdPanel);
                                 break;
                             case "NoOpThePush":
