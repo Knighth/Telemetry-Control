@@ -18,7 +18,7 @@ namespace TelemetryControl
     {
         public static bool DEBUG_LOG_ON = false;
         public static byte DEBUG_LOG_LEVEL = 0;
-        internal const ulong MOD_WORKSHOPID = 536250255uL;
+        internal const ulong MOD_WORKSHOPID = 556416380uL;
         internal const string MOD_OFFICIAL_NAME = "Telemetry Control";  //debug==must match folder name
         internal const string MOD_DLL_NAME = "TelemetryControl";
         internal const string MOD_DESCRIPTION = "Allows you to control what if any data is sent to PDX.";
