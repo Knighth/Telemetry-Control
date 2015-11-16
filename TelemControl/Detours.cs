@@ -31,9 +31,9 @@ namespace TelemetryControl
             if (OursIsPublic) { bindflags2 = BindingFlags.Static | BindingFlags.Public; }
 
             var theMethod = type1.GetMethod(p, bindflags1);
-            if (Mod.DEBUG_LOG_ON) { Helper.dbgLog(string.Concat("attempting to redirect ", theMethod.ToString(), " to ",type2.GetMethod(p, bindflags2).ToString()));}
+            if (Mod.DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog(string.Concat("attempting to redirect ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
             redirectDic.Add(theMethod, RedirectionHelper.RedirectCalls(theMethod, type2.GetMethod(p, bindflags2), false)); //makes the actual detour and stores the callstate info.
-            if (Mod.DEBUG_LOG_ON) { Helper.dbgLog(string.Concat("redirect success: ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
+            if (Mod.DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog(string.Concat("redirect success: ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
             //RedirectionHelper.RedirectCalls(type1.GetMethod(p, bindflags1), type2.GetMethod(p, bindflags2), false);
         }
 
@@ -43,9 +43,9 @@ namespace TelemetryControl
             var bindflags2 = BindingFlags.Instance | BindingFlags.NonPublic;
             if (OursIsPublic) { bindflags2 = BindingFlags.Instance | BindingFlags.Public; }
             var theMethod = type1.GetMethod(p, bindflags1);
-            if (Mod.DEBUG_LOG_ON) { Helper.dbgLog(string.Concat("attempting to redirect ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
+            if (Mod.DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog(string.Concat("attempting to redirect ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
             redirectDic.Add(theMethod, RedirectionHelper.RedirectCalls(theMethod, type2.GetMethod(p, bindflags2), false)); //makes the actual detour and stores the callstate info.
-            if (Mod.DEBUG_LOG_ON) { Helper.dbgLog(string.Concat("redirect success: ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
+            if (Mod.DEBUG_LOG_ON && Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog(string.Concat("redirect success: ", theMethod.ToString(), " to ", type2.GetMethod(p, bindflags2).ToString())); }
             //RedirectionHelper.RedirectCalls(type1.GetMethod(p, bindflags1), type2.GetMethod(p, bindflags2), false);
         }
 

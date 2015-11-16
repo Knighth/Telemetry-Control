@@ -1,6 +1,20 @@
 Telemetry Control change log
 
+v1.2.2-f3 Build_02
+------------------
++ workshop release
++ additional code added to handle workshopad panel being disabled when the panel is reloaded
+  coming back to main menu from map\asset\game. previously the standard "-noworkshop" message
+  was reloading instead of our message. jury rigged some stuff to replace it after a second passes.
+- Removed the no-nothing MachineInfo and GameStart up event checkboxes, feed back suggests it
+  might only cause confusion.
++ Updated Assembly-Csharp patched dll for 1.2.2-f3 for anyone that wants to use it.
++ Trapped for and added some code to prevent and exception case where app was closing but
+  we were trying to reset the panel back to normal but the panel had already been destroyed.
+  We handle now in both trying not to run that code if we can detect application quiting,
+  and even if it does and error we catch the nullref and only log it if debuglogging is on.
 
-Build 01
-------------
+
+v1.2.1-f1 01  Build_01
+---------------------
 + Initial release

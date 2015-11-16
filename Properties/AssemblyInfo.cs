@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Telemetry Control")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("1.2.2-f3 build_002")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Telemetry Control")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyCopyright("Copyright ©  2015 - 1.2.2-f3 build_002")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -34,4 +34,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.2.2.0")]
 [assembly: AssemblyFileVersion("1.2.2.0")]
-[assembly: AssemblyInformationalVersion("1.2.2.0-f3 Build001")]
+[assembly: AssemblyInformationalVersion("1.2.2.0-f3 Build002")]

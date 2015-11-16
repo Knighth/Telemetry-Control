@@ -23,11 +23,16 @@ namespace TelemetryControl
         internal const string MOD_DLL_NAME = "TelemetryControl";
         internal const string MOD_DESCRIPTION = "Allows you to control what if any data is sent to PDX.";
         internal static readonly string MOD_DBG_Prefix = "Telemetry Control"; //same..for now.
-        internal const string VERSION_BUILD_NUMBER = "1.2.2-f3 build_001";
+        internal const string VERSION_BUILD_NUMBER = "1.2.2-f3 build_002";
         public static readonly string MOD_CONFIGPATH = "TelemetryControl_Config.xml";
-        
+        internal const string UILABEL_MSG_TEXT = "You may mouse-over each item to get some idea of what data the event sends to Paradox.\nRemember that your Steamid or Pdx id is always attached to each telemetry message.\n\n*Please note that the application startup event and the machine information events\n happen before this mod can load and can not be blocked with this mod.\n (Unless you are using a patched Assembly-CSharp.dll - see workshop page for more information.)";
+        internal const string WORKSHOPADPANEL_REPLACE_TEXT = "Panel disabled by Telemetry Control mod.";
+        internal const string WORKSHOPADPAENL_ORG_TEXT = "This panel is inactive as the game was started using the '-noWorkshop' toggle.";
+
         public static bool IsEnabled = false;           //tracks if the mod is enabled.
         public static bool IsInited = false;            //tracks if we're inited
+        private static bool isMsgLabelSetup = false;
+        private static UILabel uiMsg; 
 
         public static bool IsPushDetoured = false;       //Have we redirected Telemetry?
         public static bool IsTMDetoured = false;       //Have we redirected TelemetryManager?
@@ -63,6 +68,7 @@ namespace TelemetryControl
         {
             if (Mod.DEBUG_LOG_ON & Mod.DEBUG_LOG_LEVEL >= 2) { Helper.dbgLog("fired."); }
             IsInProcessOfDisable = false;
+            MenuHooker.AbortMiniFlag = false;
             ReloadConfigValues(true, false);
             if (Mod.IsInited == false)
             {
@@ -181,6 +187,7 @@ namespace TelemetryControl
              if (IsInited)
              {
                  if (DEBUG_LOG_ON & DEBUG_LOG_LEVEL >= 2) { Helper.dbgLog("Un-Init triggered."); }
+                 MenuHooker.AbortMiniFlag = true;
                  Detours.ReveseSetup();
                  IsInited = false;
                  IsInProcessOfDisable = true;
@@ -221,6 +228,7 @@ namespace TelemetryControl
             try
             {
                 if (Mod.DEBUG_LOG_ON) { Helper.dbgLog("Refreshing tooltips telemetrylevel=" + Mod.config.TelemetryLevel.ToString()); }
+
                 UICheckBox[] cb = component.GetComponentsInChildren<UICheckBox>(true);
                 if (cb != null && cb.Length > 0)
                 {
@@ -231,14 +239,14 @@ namespace TelemetryControl
                             case "Enable Verbose Logging":
                                 cb[i].tooltip = "Enables detailed logging for debugging purposes\n See config file for even more options, unless there are problems you probably don't want to enable this.";
                                 break;
-                            case "Disable OnAppStartup":
-                                cb[i].tooltip = "Disables telemetry sent for when you boot up the game exe.\n**Please Note: This setting does nothing atm, mods load too late to change this\n if you want to disable this you must use patched Assemembly-CSharp.dll";
-                                cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnAppStart);
-                                break;
-                            case "Disable Machine Info":
-                                cb[i].tooltip = "Disables telemetry sent for when you boot up the game exe.\n it includes information to id your specific computer spec & steamid or paradox login\n**Please Note: This setting does nothing atm, mods load too late to change this\n if you want to disable this you must use patched Assemembly-CSharp.dll";
-                                cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableMachineInfo);
-                                break;
+                            //case "Disable OnAppStartup":
+                            //    cb[i].tooltip = "Disables telemetry sent for when you boot up the game exe.\n**Please Note: This setting does nothing atm, mods load too late to change this\n if you want to disable this you must use patched Assemembly-CSharp.dll";
+                            //    cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnAppStart);
+                            //    break;
+                            //case "Disable Machine Info":
+                            //    cb[i].tooltip = "Disables telemetry sent for when you boot up the game exe.\n it includes information to id your specific computer spec & steamid or paradox login\n**Please Note: This setting does nothing atm, mods load too late to change this\n if you want to disable this you must use patched Assemembly-CSharp.dll";
+                            //    cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableMachineInfo);
+                            //    break;
                             case "Disable Custom Content":
                                 cb[i].tooltip = "Disables telemetry about what custom content you load with a map.\n It includes information such has counts of building,props,trees,vehicles,mods, and details about every enabled mod.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableCustomContent );
@@ -252,15 +260,15 @@ namespace TelemetryControl
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableSessionLoaded );
                                 break;
                             case "Disable Session End":
-                                cb[i].tooltip = "Disables telemetry about a Session End (map unloaded).\n it includes data that a session has ended, and of what type it was (map,game,asset)";
+                                cb[i].tooltip = "Disables telemetry about a Session End (map unloaded).\n it includes data that a session has ended, and of what type it was (map,game,asset).";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableEndSession);
                                 break;
                             case "Disable Exception Reporting":
-                                cb[i].tooltip = "Disables telemetry about an Exception Error occuring.\n This only sends the 'type' of error and the basic error message, it does not send a stack trace";
+                                cb[i].tooltip = "Disables telemetry about an Exception Error occuring.\n This only sends the 'type' of error and the basic error message, it does not send a stack trace.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableExceptionReporting);
                                 break;
                             case "Disable OnAppQuit":
-                                cb[i].tooltip = "Disables telemetry sent when you exit the game.\n This includes a message that you exited the game and a timestamp\n Please remember your steamid or pdx id is always attached to each of these messages";
+                                cb[i].tooltip = "Disables telemetry sent when you exit the game.\n This includes data that you exited the game and a timestamp.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnQuit);
                                 break;
                             case "Disable Store Clicks":
@@ -272,32 +280,32 @@ namespace TelemetryControl
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnClicks);
                                 break;
                             case "Disable Paradox Login":
-                                cb[i].tooltip = "Disables telemetry sent when the game logs you into your paradox account \n This sends that you were auto-logged in and a timestamp.";
+                                cb[i].tooltip = "Disables telemetry sent when the game logs you into your paradox account \n This sends data that you were auto-logged in and a timestamp.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableParadoxLogin);
                                 break;
                             case "Enable All SendToFile Only":
-                                cb[i].tooltip = "Enables all telemetry - but nothing will be sent to Paradox, only logged in your log file.\n **Please note that OnAppStartup and MachineInfo are excluded from this unless you are using the patched Assembly-CSharp.dll";
+                                cb[i].tooltip = "Enables all telemetry - but nothing will be sent to Paradox, only logged in your log file.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.EnableAllButLogToFileInstead);
                                 break;
                             case "DisableWorkshopAdPanel":
-                                cb[i].tooltip = "Attempts to disable the workshop 'feeds' panel, does not disable workshop in general.\n There is no telemetry directly associated with disabling this.\n I simply find the feeds a waste of bandwidth.";
+                                cb[i].tooltip = "Disables the workshop 'feed' panel, does NOT disable Workshop in general.\n There is no telemetry directly associated with disabling this.\n I simply find the feeds a waste of bandwidth.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableWorkshopAdPanel);
                                 break;
                             case "NoOpThePush":
-                                cb[i].tooltip = "Test setting, it's a master overide to make Telemetry.Push() do nothing.\n If set nothing will be sent or logged if not in debug mode.\n standard disclaimer about startup&machineinfo still applies.";
+                                cb[i].tooltip = "This is a master overide to make Telemetry.Push() (function that sends the data) do absolutely nothing.\n If set nothing will be sent OR even logged (if not in verbose logging mode).";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.NoOpThePush);
                                 break;
                             case "SetURL To LocalHost":
-                                cb[i].tooltip = "Test setting, sets the Paradox API URL to whatever you have in your config file.\n The default is 'https://localhost:49100/cities' if enabled.\n can be used if you want to enable everything but log to your own server";
+                                cb[i].tooltip = "Sets the Paradox API URL to whatever you have in your config file.\n The default is 'https://localhost:49100/cities' if enabled.\n Can be used if you want to enable everything but send data your own web server.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.SetAPIUrlLocalHost);
                                 break;
 
                             case "Disable All Telemetry":
-                                cb[i].tooltip = "Disables all telemetry - Nothing will be sent to Paradox.\n **Please note that OnAppStartup and MachineInfo are excluded from this unless you are using the patched Assembly-CSharp.dll";
+                                cb[i].tooltip = "Disables all telemetry - Nothing will be sent to Paradox.\nYou do NOT have to select the individual options if this is set.\n *Please see note at bottom of options page about the OnAppStartup and MachineInfo telemetry events.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableAll);
                                 break;
                             case "Enable All Telemetry":
-                                cb[i].tooltip = "Enables all telemetry - The games default behavior.";
+                                cb[i].tooltip = "Enables all telemetry - The game's default behavior.";
                                 cb[i].isChecked = Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.EnableAll);
                                 break;
                             default:
@@ -309,7 +317,23 @@ namespace TelemetryControl
                 List<UIButton> bb = new List<UIButton>();
                 component.GetComponentsInChildren<UIButton>(true, bb);
                 if ( bb.Count > 0)
-                { bb[0].tooltip = "Press this after making changes to ensure all changes are activated.\n "; }
+                { 
+                    bb[0].tooltip = "Press this after making changes to ensure all changes are activated.\n "; 
+
+                    if (!isMsgLabelSetup)
+                    { 
+                        uiMsg = component.AddUIComponent<UILabel>();
+                        isMsgLabelSetup = true;
+                        uiMsg.name = "TelemetryMessageText";
+                        uiMsg.text = UILABEL_MSG_TEXT;
+                        uiMsg.width = 350f;
+                        
+                        //uiMsg.wordWrap = true;
+                        uiMsg.relativePosition = new Vector3(bb[0].relativePosition.x, bb[0].relativePosition.y + 30f);
+                        uiMsg.Show();
+                    }
+
+                }
 
                 if (Mod.DEBUG_LOG_ON) { Helper.dbgLog("Tooltips set"); }
             }
@@ -329,8 +353,8 @@ namespace TelemetryControl
 
             UIHelperBase group = helper.AddGroup("Telemetry Control");
             group.AddCheckbox("Disable All Telemetry", Helper.HasTelemFlag(Mod.config.TelemetryLevel,Helper.TelemOption.DisableAll), OptionDisableAllTelemetry);
-            group.AddCheckbox("Disable OnAppStartup", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnAppStart), OptionDisableOnAppStart);
-            group.AddCheckbox("Disable Machine Info", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableMachineInfo), OptionDisableMachineInfo);
+            //group.AddCheckbox("Disable OnAppStartup", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableOnAppStart), OptionDisableOnAppStart);
+            //group.AddCheckbox("Disable Machine Info", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableMachineInfo), OptionDisableMachineInfo);
             group.AddCheckbox("Disable Custom Content", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableCustomContent), OptionDisableCustomContent);
             group.AddCheckbox("Disable Session Start", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableStartSession), OptionDisableStartSession);
             group.AddCheckbox("Disable Session Loaded", Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableSessionLoaded), OptionDisableSessionLoaded);
@@ -349,8 +373,15 @@ namespace TelemetryControl
             group.AddCheckbox("Enable Verbose Logging", DEBUG_LOG_ON, LoggingChecked);
             group.AddSpace(20);
             group.AddButton("Update", SetStartupOptions);
-           
-          
+            if (Mod.DEBUG_LOG_ON) { Helper.dbgLog("OnSettingsUI fired" + DateTime.Now.ToString()); }
+
+            if (Mod.IsEnabled && Mod.IsInited && !Mod.IsInProcessOfDisable &&
+                Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableWorkshopAdPanel) &&
+                Singleton<TelemetryManager>.instance != null)
+            {
+                //SetupWorkShopFeed();
+                Singleton<TelemetryManager>.instance.StartCoroutine(MenuHooker.SetDelayedDisabledLabelTextMini()); 
+            }
         }
 
         public void OptionDisableAllTelemetry(bool en)
@@ -363,10 +394,15 @@ namespace TelemetryControl
             ToggleTelemetrySetting(Helper.TelemOption.EnableAll, en);
         }
 
-        public void OptionDisableOnAppStart(bool en)
-        {
-            ToggleTelemetrySetting(Helper.TelemOption.DisableOnAppStart, en);
-        }
+        //public void OptionDisableOnAppStart(bool en)
+        //{
+        //    ToggleTelemetrySetting(Helper.TelemOption.DisableOnAppStart, en);
+        //}
+
+        //public void OptionDisableMachineInfo(bool en)
+        //{
+        //    ToggleTelemetrySetting(Helper.TelemOption.DisableMachineInfo, en);
+        // }
 
         public void OptionDisableOnQuit(bool en)
         {
@@ -374,10 +410,6 @@ namespace TelemetryControl
         }
 
 
-        public void OptionDisableMachineInfo(bool en)
-        {
-            ToggleTelemetrySetting(Helper.TelemOption.DisableMachineInfo, en);
-        }
 
         public void OptionDisableCustomContent(bool en)
         {
@@ -543,29 +575,8 @@ namespace TelemetryControl
          {
              try
              {
-                 if (Helper.HasTelemFlag(Mod.config.TelemetryLevel ,Helper.TelemOption.DisableWorkshopAdPanel))
-                 {
-                     if (!IsInProcessOfDisable)
-                     {
-                         //we are set, we are no in the middle of disabling; if we're 'enabled'(gui) then we'll
-                         //attempt to disable workshop,if not it'll just set the dontInitialize var to true.
-                         if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Flagged to disable, no unloading of mod, trying to Set DisableWorkshopAdPanel true"); }
-                         WorkShopAdPanelDisableWrapper();
-                     }
-                     else
-                     {
-                         //here we are in the mod\disable - removal process and we want to return things to normal.
-                         WorkShopAdPanelEnableWrapper();
-                         if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Mod is in disabling process, we're set, but we are setting DisableWorkshopAdPanel false"); }
-                     }
-                 }
-                 else
-                 {
-                     //Panel should be enabled, if mod is enabled (ie have gui let's try and re-enable), else just
-                     //flip the dontInitialize bool var.
-                     WorkShopAdPanelEnableWrapper();   
-                     if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Set DisableWorkshopAdPanel false"); }
-                 }
+                 //call out to this guy 
+                 SetupWorkShopFeed();
 
 
                  //Handle EnableAllButLogToFileInstead aka Telemetry.debug
@@ -600,7 +611,7 @@ namespace TelemetryControl
  
                  }
 
-                 //does the based on the config, check's itself for state.
+                 //does based on the config, check's itself for state.
                  TelemetryKH.SetPDXAPILocalHost();
                  
 //                 if (MyOptionComponent != null) 
@@ -608,6 +619,36 @@ namespace TelemetryControl
              }
              catch (Exception ex)
              { Helper.dbgLog("Error: ", ex, true); }
+         }
+
+         /// <summary>
+         /// Handles the calls to the wrappers to setup\enable\disable the Workshop panel and disabled label text. 
+         /// </summary>
+         internal static void SetupWorkShopFeed()
+         {
+             if (Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableWorkshopAdPanel))
+             {
+                 if (!IsInProcessOfDisable)
+                 {
+                     //we are set, we are no in the middle of disabling; if we're 'enabled'(gui) then we'll
+                     //attempt to disable workshop,if not it'll just set the dontInitialize var to true.
+                     if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Flagged to disable, no unloading of mod, trying to Set DisableWorkshopAdPanel true"); }
+                     WorkShopAdPanelDisableWrapper();
+                 }
+                 else
+                 {
+                     //here we are in the mod\disable - removal process and we want to return things to normal.
+                     WorkShopAdPanelEnableWrapper();
+                     if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Mod is in disabling process, we're set, but we are setting DisableWorkshopAdPanel false"); }
+                 }
+             }
+             else
+             {
+                 //Panel should be enabled, if mod is enabled (ie have gui let's try and re-enable), else just
+                 //flip the dontInitialize bool var.
+                 WorkShopAdPanelEnableWrapper();
+                 if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Set DisableWorkshopAdPanel false"); }
+             }
          }
 
 
@@ -695,7 +736,7 @@ namespace TelemetryControl
                      else
                      { Singleton<TelemetryManager>.instance.StartCoroutine(SetDelayedDisabledLabelText()); }
                  }
-                 else
+                 else //used during bootup process
                  {
                      if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("NotInDisableProcess, Mod.IsEnabled=false - setting static var on WorkshopAdPanels"); }
                      WorkshopAdPanel tmpWAP = new WorkshopAdPanel();
@@ -706,7 +747,7 @@ namespace TelemetryControl
                          if (dl != null)
                          {
                              orgNoWorkshopText = dl.text;
-                             dl.text = "Disabled via Telemetry Control Mod.";
+                             dl.text = "Panel disabled via Telemetry Control Mod.";
                          }
                      }
                  }
@@ -716,7 +757,7 @@ namespace TelemetryControl
          }
 
 
-         private static bool AttemptToDisableWorkshop(UIView rootView)
+         internal static bool AttemptToDisableWorkshop(UIView rootView)
          {
              WorkshopAdPanel tmpWAP;
              try
@@ -755,8 +796,10 @@ namespace TelemetryControl
                      if (tl != null)
                      {
                          orgNoWorkshopText = tl.text;
-                         tl.text = "Disabled via Telemetry Control Mod.";
-                         tl.isVisible = true; 
+                         tl.text = WORKSHOPADPANEL_REPLACE_TEXT;
+                         tl.isVisible = true;
+                         if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("DisabledLabel set to " + tl.text + "  orginal=" + orgNoWorkshopText); }
+
                      }
                      return true;
                  }
@@ -764,15 +807,22 @@ namespace TelemetryControl
              }
              catch (Exception ex)
              { Helper.dbgLog("Error: ", ex, true); }
-
-             tmpWAP = new WorkshopAdPanel();
-             typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, true);
-             UILabel dl = rootView.FindUIComponent<UILabel>("DisabledLabel");
-             if (dl != null)
+            
+             try
              {
-                 orgNoWorkshopText = dl.text;
-                 dl.text = "Disabled via Telemetry Control Mod.";
+                 tmpWAP = new WorkshopAdPanel();
+                 typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, true);
+                 UILabel dl = rootView.FindUIComponent<UILabel>("DisabledLabel");
+                 if (dl != null)
+                 {
+                     orgNoWorkshopText = dl.text;
+                     dl.text = WORKSHOPADPANEL_REPLACE_TEXT;
+                     if (DEBUG_LOG_ON && DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("fallthrough - DisabledLabel set to " + dl.text + "  orginal=" + orgNoWorkshopText); }
+                 }
              }
+             catch (Exception ex)
+             { Helper.dbgLog("Error: trying to set disabledLabel component during fallthrough", ex, true); }
+
              return false;
          }
 
@@ -837,13 +887,23 @@ namespace TelemetryControl
              }
              catch (Exception ex)
              { Helper.dbgLog("Error: ", ex, true); }
-             tmpWAP = new WorkshopAdPanel();
-             typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, false);
-             UILabel dl = rootView.FindUIComponent<UILabel>("DisabledLabel");
-             if (dl != null)
+
+             try
              {
-                 dl.text = orgNoWorkshopText;
+                 if (!Singleton<LoadingManager>.instance.m_applicationQuitting)
+                 {
+                     tmpWAP = new WorkshopAdPanel();
+                     typeof(WorkshopAdPanel).GetField("dontInitialize", BindingFlags.NonPublic | BindingFlags.Static).SetValue(tmpWAP, false);
+                     UILabel dl = rootView.FindUIComponent<UILabel>("DisabledLabel");
+                     if (dl != null)
+                     {
+                         dl.text = orgNoWorkshopText;
+                     }
+                 }
              }
+             catch (Exception ex)
+             { if (Mod.DEBUG_LOG_ON) { Helper.dbgLog("Error: Most likey panel was destroyed already during exit\\quit game action", ex, true); } }
+
              return false;
          }
     }
