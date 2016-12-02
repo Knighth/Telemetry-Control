@@ -1,6 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.Plugins;
-using ColossalFramework.Steamworks;
+using ColossalFramework.PlatformServices;
 using ColossalFramework.UI;
 using ICities;
 using System;
@@ -23,7 +23,7 @@ namespace TelemetryControl
         internal const string MOD_DLL_NAME = "TelemetryControl";
         internal const string MOD_DESCRIPTION = "Allows you to control what if any data is sent to PDX.";
         internal static readonly string MOD_DBG_Prefix = "Telemetry Control"; //same..for now.
-        internal const string VERSION_BUILD_NUMBER = "1.2.2-f3 build_002";
+        internal const string VERSION_BUILD_NUMBER = "1.6.0-f4 build_001";
         public static readonly string MOD_CONFIGPATH = "TelemetryControl_Config.xml";
         internal const string UILABEL_MSG_TEXT = "You may mouse-over each item to get some idea of what data the event sends to Paradox.\nRemember that your Steamid or Pdx id is always attached to each telemetry message.\n\n*Please note that the application startup event and the machine information events\n happen before this mod can load and can not be blocked with this mod.\n (Unless you are using a patched Assembly-CSharp.dll - see workshop page for more information.)";
         internal const string WORKSHOPADPANEL_REPLACE_TEXT = "Panel disabled by Telemetry Control mod.";
@@ -869,7 +869,7 @@ namespace TelemetryControl
                      tmpWAP.component.isEnabled = true;
                      tmpWAP.component.isVisible = true;
                      tmpWAP.component.Awake();
-                     Steam.workshop.QueryItems();
+                     PlatformService.workshop.QueryItems();
                      typeof(WorkshopAdPanel).GetField("m_LastTime", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(tmpWAP, Time.realtimeSinceStartup);
                      UILabel tl = rootView.FindUIComponent<UILabel>("DisabledLabel");
                      if (tl != null)

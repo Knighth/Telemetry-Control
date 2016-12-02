@@ -1,5 +1,9 @@
 Telemetry Control change log
 
+v1.6.0-f4 build_01
+------------------
+recompiled for 1.6 patch and small related steamworks\platformservces tweaks.
+
 v1.2.2-f3 Build_02
 ------------------
 + workshop release

@@ -1,5 +1,5 @@
 
-Telemetry Control v1.2.2-f3 Build 02 
+Telemetry Control v1.6.0-f4 Build 01 
 ------------------------------------
 
 Purpose:
@@ -32,7 +32,7 @@ Cause I don't like that 'feed' i'm sure most people love it, personally I don't 
 
 Additional options to block those two items mentioned
 -----------------------------------------------------
-Using a patched dll
+Using a patched dll [as of 1.6 I'm not updating the patched dll anymore]
 
 You will need to replace one of your game dll's with a patched version. The patched version forces that data to be logged to your log file instead of sent to PDX. If using a patched dll is not something you want to do, or you don't trust me, that's cool I fully understand and this method is not for you then. In fact I'm not going to provide instructions, if you have a clue you'll know what to do with with the patched dll that you can find in bin folder of github repository, if you don't, then, again this method is not for you. 
 

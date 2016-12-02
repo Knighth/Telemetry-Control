@@ -2,7 +2,6 @@
 using ColossalFramework.IO;
 using ColossalFramework.Plugins;
 using ColossalFramework.Packaging;
-using ColossalFramework.Steamworks;
 using ColossalFramework;
 using UnityEngine;
 using System;
@@ -106,7 +105,7 @@ namespace TelemetryControl
             }
             catch (Exception Exp)
             {
-                Debug.Log(string.Concat("[CSLShowMoreLimits.Helper.dbgLog()] Error in log attempt!  ", Exp.Message.ToString()));
+                Debug.Log(string.Concat("[TelemetryControl.Helper.dbgLog()] Error in log attempt!  ", Exp.Message.ToString()));
             }
             logSB.Length = 0;
             //if we grew large for some odd reason (large log call), let's shink ourselves.

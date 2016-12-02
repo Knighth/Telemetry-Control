@@ -1,5 +1,5 @@
 ﻿using ColossalFramework.IO;
-using ColossalFramework.Steamworks;
+using ColossalFramework.PlatformServices;
 using ColossalFramework;
 using ColossalFramework.HTTP.Paradox;
 using ColossalFramework.HTTP;
@@ -168,63 +168,78 @@ namespace TelemetryControl
         public void Push()
         {
             if (Mod.DEBUG_LOG_LEVEL > 1) { Helper.dbgLog("Push triggered. " + DateTime.Now.ToString()); }
-            Hashtable hashtable = new Hashtable();
-            if (Account.currentAccount != null)
-            {
-                hashtable.Add("userid", Account.currentAccount.id);
-                hashtable.Add("universe", "accounts");
-            }
-            else
-            {
-                hashtable.Add("userid", ColossalFramework.Steamworks.Steam.steamID.ToString());
-                hashtable.Add("universe", "steam");
-            }
-            hashtable.Add("game", ColossalFramework.IO.DataLocation.productName.ToLower());
-            hashtable.Add("steamid", ColossalFramework.Steamworks.Steam.steamID.ToString());
-            ArrayList arrayList = new ArrayList();
-            //Dictionary<string, List<Telemetry.Pair>> m_Data = new Dictionary<string,List<Telemetry.Pair>>();
-            //m_Data = (Dictionary<string, List<Telemetry.Pair>> )typeof(Telemetry).GetField("m_Data", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(m_Data); //.GetValue(ppp);
+            Hashtable hashtables = new Hashtable();
 
-            foreach (KeyValuePair<string, List<Telemetry.Pair>> current in m_Data)
+            if (Account.currentAccount == null)
             {
-                int num = this.IsStandardTelemetry(current.Key) ? 3 : 6;
-                Hashtable hashtable2 = null;
-                if (current.Value.Count == 0)
+                hashtables.Add("userid", PlatformService.userID.ToString());
+                if (PlatformService.apiBackend == APIBackend.Steam)
                 {
-                    arrayList.Add(new Hashtable
-        			{
-				        {
-					        "event",
-					        current.Key
-				        },
-				        {
-					        "timestamp",
-					        DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff")
-				        }
-			        });
+                    hashtables.Add("universe", "steam");
                 }
-                else
+                else if (PlatformService.apiBackend == APIBackend.Rail)
                 {
-                    for (int i = 0; i < current.Value.Count; i++)
+                    if (PlatformService.platformType == PlatformType.TGP)
                     {
-                        if (i % num == 0)
-                        {
-                            hashtable2 = new Hashtable();
-                            hashtable2.Add("event", current.Key);
-                            hashtable2.Add("timestamp", DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff"));
-                            arrayList.Add(hashtable2);
-                        }
-                        hashtable2[current.Value[i].key] = current.Value[i].value;
+                        hashtables.Add("universe", "tgp");
+                    }
+                    else if (PlatformService.platformType == PlatformType.QQGame)
+                    {
+                        hashtables.Add("universe", "qq");
                     }
                 }
             }
-            hashtable.Add("data", arrayList);
+            else
+            {
+                hashtables.Add("userid", Account.currentAccount.id);
+                hashtables.Add("universe", "accounts");
+            }
+
+            hashtables.Add("game", DataLocation.productName.ToLower());
+            hashtables.Add("steamid", PlatformService.userID.ToString());
+            ArrayList arrayLists = new ArrayList();
+            foreach (KeyValuePair<string, List<Telemetry.Pair>> mDatum in this.m_Data)
+            {
+                int num = (this.IsStandardTelemetry(mDatum.Key) ? 3 : 6);
+                Hashtable item = null;
+                if (mDatum.Value.Count != 0)
+                {
+                    for (int i = 0; i < mDatum.Value.Count; i++)
+                    {
+                        if (i % num == 0)
+                        {
+                            item = new Hashtable()
+                            {
+                                { "event", mDatum.Key }
+                            };
+                            DateTime universalTime = DateTime.Now.ToUniversalTime();
+                            item.Add("timestamp", universalTime.ToString("yyyy-MM-ddTHH:mm:ss.fff"));
+                            arrayLists.Add(item);
+                        }
+                        Telemetry.Pair pair = mDatum.Value[i];
+                        item[pair.key] = mDatum.Value[i].@value;
+                    }
+                }
+                else
+                {
+                    item = new Hashtable()
+                    {
+                        { "event", mDatum.Key }
+                    };
+                    DateTime dateTime = DateTime.Now.ToUniversalTime();
+                    item.Add("timestamp", dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff"));
+                    arrayLists.Add(item);
+                }
+            }
+            hashtables.Add("data", arrayLists);
+
+            
 
             if (Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.DisableAll) ||
                 Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.NoOpThePush))
             {
                 if (Mod.DEBUG_LOG_ON)
-                { Helper.dbgLog("NoOp'd the Push and clearing the hashtables.  \r\n" + JSON.JsonEncode(hashtable)); }
+                { Helper.dbgLog("NoOp'd the Push and clearing the hashtables.  \r\n" + JSON.JsonEncode(hashtables)); }
 
                 this.Clear();
                 return;
@@ -233,13 +248,13 @@ namespace TelemetryControl
             if (Telemetry.debug || Helper.HasTelemFlag(Mod.config.TelemetryLevel, Helper.TelemOption.EnableAllButLogToFileInstead))
             {
                 if (Mod.DEBUG_LOG_ON) { Helper.dbgLog("Dumping telemetry to log enabled:"); }
-                Helper.dbgLog("logging data that would be pushed:\n" + JSON.JsonEncode(hashtable));
+                Helper.dbgLog("logging data that would be pushed:\n" + JSON.JsonEncode(hashtables));
                 this.Clear();
                 return;
             }
             if (Mod.DEBUG_LOG_ON)
-            { Helper.dbgLog("debug mode, Pushing data.  :\r\n" + JSON.JsonEncode(hashtable)); }
-            Request request2 = new Request("post", Telemetry.paradoxApiURL, hashtable);
+            { Helper.dbgLog("debug mode, Pushing data.  :\r\n" + JSON.JsonEncode(hashtables)); }
+            Request request2 = new Request("post", Telemetry.paradoxApiURL, hashtables);
             request2.Send(delegate(Request request)
             {
                 this.Clear();

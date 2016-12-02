@@ -14,7 +14,7 @@ namespace TelemetryControl
         public string ConfigReserved = ""; //reserved value again for possible migration\upgrade data or some unknown use.
         public bool DebugLogging = false;   
         public byte DebugLoggingLevel = 0;  //detail: 1 basically very similar to just on+0 ; 2 = Very detailed; 3+ extreme only meant for me during dev...if that. 
-        public bool UseCustomLogFile = true;
+        public bool UseCustomLogFile = false;
         public bool TelemetryBootEnabled = false;
         public string SetAPIUrlLocalHost = "https://localhost:49100/cities";
         public uint TelemetryLevel = 2097152;
