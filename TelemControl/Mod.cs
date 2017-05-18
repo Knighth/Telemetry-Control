@@ -23,7 +23,7 @@ namespace TelemetryControl
         internal const string MOD_DLL_NAME = "TelemetryControl";
         internal const string MOD_DESCRIPTION = "Allows you to control what if any data is sent to PDX.";
         internal static readonly string MOD_DBG_Prefix = "Telemetry Control"; //same..for now.
-        internal const string VERSION_BUILD_NUMBER = "1.6.0-f4 build_001";
+        internal const string VERSION_BUILD_NUMBER = "1.7.0-f5 build_001";
         public static readonly string MOD_CONFIGPATH = "TelemetryControl_Config.xml";
         internal const string UILABEL_MSG_TEXT = "You may mouse-over each item to get some idea of what data the event sends to Paradox.\nRemember that your Steamid or Pdx id is always attached to each telemetry message.\n\n*Please note that the application startup event and the machine information events\n happen before this mod can load and can not be blocked with this mod.\n (Unless you are using a patched Assembly-CSharp.dll - see workshop page for more information.)";
         internal const string WORKSHOPADPANEL_REPLACE_TEXT = "Panel disabled by Telemetry Control mod.";
@@ -585,6 +585,13 @@ namespace TelemetryControl
                      if (!IsInProcessOfDisable)
                      {
                          ColossalFramework.HTTP.Paradox.Telemetry.debug = true;
+                         if(Singleton<PopsManager>.exists)
+                         {
+                             PopsManager PMgr = Singleton<PopsManager>.instance;
+                             if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Setting pops Telemetry.Debug's True"); }
+                             //PMgr.c
+                         }
+
                          TelemetryKH.debug = true;
                          if (DEBUG_LOG_LEVEL >= 1) { Helper.dbgLog("Setting both Telemetry.Debug's True"); }
                      }

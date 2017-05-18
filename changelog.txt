@@ -1,5 +1,11 @@
 Telemetry Control change log
 
+ToDo: update for new telem v2.0 invasive system.
+
+v1.7.0-f5 build_01
+------------------
+No changes, recompiled for 1.7 and basic test.
+
 v1.6.0-f4 build_01
 ------------------
 recompiled for 1.6 patch and small related steamworks\platformservces tweaks.
